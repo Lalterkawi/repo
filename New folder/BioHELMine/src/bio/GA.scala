@@ -1,7 +1,7 @@
 package bio
 
 
-class GA(POP_SIZE:Int, is:instanceSet,tglobal:TimerGlobal ) {
+class GA(POP_SIZE:Int, is:instanceSet,tglobal:TimerGlobal ) extends Serializable{
 
 	val att=is.attributesInfo
 			val cm =scala.io.Source.fromFile("myfile.txt").getLines.toList

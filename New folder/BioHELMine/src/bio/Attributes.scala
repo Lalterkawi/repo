@@ -3,6 +3,7 @@ package bio
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+import org.xml.sax.Attributes
 class Attributes (NumAtt:Int) extends Serializable{
     	    val REAL =1
     			val NOMINAL =2
@@ -134,16 +135,16 @@ class Attributes (NumAtt:Int) extends Serializable{
 					}
           
           
-          def insertInsance(instances:RDD[Instance]){
+          def insertInsance(instances:RDD[Instance]):RDD[Attributes]={
           
             
-            instances.map { x => insertInsance(x); x.updatMissing()}
-            
+         var d =  instances.map { x => insertInsance(x)}// x.updatMissing()}
+            return d
             
           }
           
 
-					def insertInsance(ins:Instance){
+					def insertInsance(ins:Instance):Attributes={
 						if(numExamples==0) 
 						{  
 							var numClasses=getNumValuesAttribute(numAttributes)
@@ -176,12 +177,13 @@ class Attributes (NumAtt:Int) extends Serializable{
 											valueFrequenciesForNominalAttributes= valueFrequenciesForNominalAttributes.map(x =>
 										  if(x._1==i ){
                       var temp= x._2.filter(y => y._1==instanceclass)(0);
+                      println(temp)
                       var pos=x._2.indexOf(temp);
-                       // println("instance class="+instanceclass +" pos= "+pos)
+                      println(pos)
                       var z=temp._2.toArray; 
                       z(ins.valueOfAttribute(i))=z(ins.valueOfAttribute(i))+1.0;  
 											(x._1, x._2.updated(pos,(instanceclass,z.toList)))
-											} 
+											}
                       else x )
 										else {
 												averageOfAttribute=averageOfAttribute.map(   x => if(x._1==i && x._2._1==instanceclass)  
@@ -212,27 +214,20 @@ class Attributes (NumAtt:Int) extends Serializable{
 									}
 
 						numExamples=numExamples+1  
-
+            return this
 					}
 
 					def calculateAverage(){
             println("trying to build values of nominal "+valuesOfNominalAttributes)
 						var numClass=getNumValuesAttribute(numAttributes)
             println(classOfInstances)
-					//	mostFrequentClass=classOfInstances.map(x =>x._2).max
-					//	var most=classOfInstances.indexOf( classOfInstances.find( x=> x._2==mostFrequentClass))
-					//	leastFrequentClass=classOfInstances.map(x =>x._2).min
-					//	var least=classOfInstances.indexOf( classOfInstances.find( x=> x._2==leastFrequentClass))
-
-						var nominalOnly= typeOfAttribute.toList.map( x=> if(x==NOMINAL) typeOfAttribute.indexOf(x) else -1).filter { x => x!=(-1) }
-						var realOnly=typeOfAttribute.toList.map( x=> if(x==REAL) typeOfAttribute.indexOf(x) else -1).filter { x => x!=(-1) }
-
+            
 						var temp=valueFrequenciesForNominalAttributes.map(x => (x._1, x._2.map(y => y._2)))
             var max=temp.map(x => maxiOf(x))  //we found for every att most freq value
 					
             valueFrequenciesForNominalAttributes.foreach(x => println(x._2)) 
             
-            var valuesCount=valueFrequenciesForNominalAttributes.map(x => (x._1,(x._2.map(y=>(y._1, (y._2.sum))  ))))    
+            //var valuesCount=valueFrequenciesForNominalAttributes.map(x => (x._1,(x._2.map(y=>(y._1, (y._2.sum))  ))))    
                 
 
 					  mostFrequentValueForNominalAttributes=valueFrequenciesForNominalAttributes.map{x =>  (x._1, maxforEachClass(x._1,x._2,max))     }
@@ -292,4 +287,35 @@ class Attributes (NumAtt:Int) extends Serializable{
         	}
         }
 
+        
+ def mergeAttributes(another:Attributes):Attributes={
+   for (i<- 0 to numAttributes)
+     if(another.typeOfAttribute(i)!=(-1))
+     {
+        if(this.typeOfAttribute(i)==(-1))  {
+          this.typeOfAttribute(i)= another.typeOfAttribute(i) 
+          this.attributeNames= another.attributeNames.filter(x=> x._1==i)(0) ::this.attributeNames
+          if(typeOfAttribute(i)==REAL){
+               averageOfAttribute=another.averageOfAttribute.filter(x => x._1==i)(0)::averageOfAttribute
+               deviationOfAttribute =another.deviationOfAttribute.filter(x => x._1==i)(0)::deviationOfAttribute
+               minDomain(i)=another.minDomain(i)
+               maxDomain(i)=another.maxDomain(i)
+               sizeDomain(i)=another.sizeDomain(i)
+               sizeDomain2(i)=another.sizeDomain2(i)
+                countNumValuesForRealAttributes= another.countNumValuesForRealAttributes.filter(x=> x._1==i)(0) ::countNumValuesForRealAttributes         
+          }
+          else{ //if it is nominal
+            
+            
+          }
+        }   
+       
+       
+     }
+   
+   return this
+ }       
+        
+        
+        
 }

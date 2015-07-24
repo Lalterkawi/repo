@@ -62,7 +62,8 @@ class instanceSet(fileName:String,cmfile:String ,att:Attributes,Train:Int) exten
 						//Indexinstances=instances.zipWithIndex()
         
 		//	instances.foreach{ x => { attributesInfo.insertInsance(x); x.updatMissing() }}
-    attributesInfo.insertInsance(instances)     
+   var tempo= attributesInfo.insertInsance(instances).reduce((x,y)=>x.mergeAttributes(y) )   
+   attributesInfo=tempo
      //  ListOfinstances.foreach{ x => { attributesInfo.insertInsance(x); x.updatMissing() }}
        numInstancesOrig=numInstances
 						
